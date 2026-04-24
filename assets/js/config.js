@@ -18,17 +18,17 @@ const SUBJECTS = {
   interdisciplinary:{ icon:'🔗', color:'#aa00ff', label:'Interdisciplinary' },
   trending:        { icon:'🔥',  color:'#ff1744', label:'Trending' }
 };
- 
+
 const LEMON_SQUEEZY = {
   monthly_url: 'REPLACE_WITH_LEMON_SQUEEZY_MONTHLY_URL',
   yearly_url:  'REPLACE_WITH_LEMON_SQUEEZY_YEARLY_URL',
   credits_url: 'REPLACE_WITH_LEMON_SQUEEZY_CREDITS_URL'
 };
- 
+
 // ── SINGLE SUPABASE CLIENT INSTANCE (strict singleton) ──
 let _sb = null;
 let _authListenerAttached = false;
- 
+
 function getSupabase() {
   if (_sb) return _sb;
   if (!window.supabase) return null;
@@ -44,21 +44,21 @@ function getSupabase() {
   });
   return _sb;
 }
- 
+
 // Global reference (set once, lazily)
 let sb = null;
 function initSupabase() {
   if (!sb) sb = getSupabase();
   return sb;
 }
- 
+
 // Try init immediately, fallback to DOMContentLoaded
 if (window.supabase) {
   initSupabase();
 } else {
   document.addEventListener('DOMContentLoaded', initSupabase);
 }
- 
+
 // ── LOCAL STORAGE CACHE ──
 const CACHE = {
   set(key, data, ttlMinutes = 60) {
@@ -79,7 +79,7 @@ const CACHE = {
   },
   clear(key) { try { localStorage.removeItem('scisim_' + key); } catch(e) {} }
 };
- 
+
 // ── SIMULATIONS DATA (cached) ──
 async function loadSimulationsData() {
   const cached = CACHE.get('sims_data');
@@ -92,11 +92,11 @@ async function loadSimulationsData() {
     return data;
   } catch(e) { return []; }
 }
- 
+
 // ── GLOBAL ERROR HANDLERS ──
 window.addEventListener('error', (e) => console.error('Error:', e.error));
 window.addEventListener('unhandledrejection', (e) => console.error('Promise:', e.reason));
- 
+
 // ── CURRENCY DETECTION ──
 async function detectCurrency() {
   const cached = CACHE.get('currency');
@@ -109,7 +109,7 @@ async function detectCurrency() {
     return currency;
   } catch(e) { return { code:'USD', country:'US' }; }
 }
- 
+
 // ── RATE LIMITING (client-side) ──
 const RATE_LIMIT = {
   check(key, maxActions, windowMinutes) {
@@ -121,4 +121,6 @@ const RATE_LIMIT = {
     localStorage.setItem('ratelim_' + key, JSON.stringify(recent));
     return true;
   }
+};
+
 };
