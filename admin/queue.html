@@ -251,7 +251,11 @@ function showTab(name, btn) {
   document.getElementById('tab-' + name).classList.add('active');
 }
 
-init();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 </script>
 </body>
 </html>
