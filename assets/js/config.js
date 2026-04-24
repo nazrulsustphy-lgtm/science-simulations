@@ -122,5 +122,3 @@ const RATE_LIMIT = {
     return true;
   }
 };
-
-};
