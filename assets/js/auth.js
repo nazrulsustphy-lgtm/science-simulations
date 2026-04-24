@@ -62,8 +62,10 @@ async function signOut() {
 
 // ── ONBOARDING — CREATE PROFILE ON FIRST LOGIN ──
 function setupAuthListener() {
+  if (_authListenerAttached) return;
   if (!sb) sb = getSupabase();
   if (!sb) return;
+  _authListenerAttached = true;
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       const user = session.user;
