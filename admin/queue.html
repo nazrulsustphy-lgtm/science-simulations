@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Queue — SciSim</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/styles.css">
+<style>
+.admin-page { max-width:1100px; margin:0 auto; padding:100px 24px 80px; position:relative; z-index:1; }
+.admin-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:32px; flex-wrap:wrap; }
+.admin-title { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; }
+.admin-badge { font-size:0.65rem; padding:3px 10px; border-radius:20px; background:rgba(255,23,68,0.15); color:var(--red); border:1px solid rgba(255,23,68,0.2); }
+.admin-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:28px; }
+.ast { background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:14px; }
+.ast-label { font-size:0.65rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px; }
+.ast-value { font-family:'Syne',sans-serif; font-size:1.5rem; font-weight:800; }
+.admin-tabs { display:flex; gap:6px; border-bottom:1px solid var(--border); margin-bottom:20px; }
+.atab { font-size:0.82rem; font-weight:600; padding:9px 14px; cursor:pointer; color:var(--dim); border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none; }
+.atab.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+.queue-item { background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:10px; }
+.qi-header { display:flex; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap; }
+.qi-topic { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; flex:1; }
+.qi-status { font-size:0.65rem; font-weight:700; padding:3px 9px; border-radius:6px; }
+.qs-pending { background:rgba(255,215,64,0.12); color:var(--yellow); }
+.qs-building { background:rgba(0,207,255,0.12); color:var(--cyan); }
+.qs-done { background:rgba(0,230,118,0.12); color:var(--green); }
+.qi-meta { font-size:0.72rem; color:var(--dim); margin-bottom:12px; }
+.qi-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.qa-btn { font-size:0.72rem; padding:6px 12px; border-radius:7px; border:1px solid var(--border2); background:transparent; color:var(--text); cursor:pointer; }
+.qa-btn.danger { border-color:rgba(255,23,68,0.3); color:var(--red); }
+.qa-btn.success { border-color:rgba(0,230,118,0.3); color:var(--green); }
+.prompt-box { background:var(--s2); border:1px solid var(--border2); border-radius:10px; padding:14px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#94a3b8; line-height:1.7; margin-top:10px; position:relative; cursor:pointer; }
+.copy-hint { position:absolute; top:8px; right:10px; font-size:0.62rem; color:var(--dim); }
+</style>
+</head>
+<body>
+<div class="admin-page">
+  <div id="adminContent">
+    <div style="text-align:center;padding:60px;color:var(--dim)">Verifying admin access...</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script>
+let allQueue = [];
+let queueFilter = 'all';
+
+async function init() {
+  const user = await getCurrentUser();
+  if (!user) { showAccessDenied('Please sign in'); return; }
+
+  // Server-side admin check via is_admin column
+  const admin = await isAdmin();
+  if (!admin) { showAccessDenied('Admin access only'); return; }
+
+  renderAdmin();
+  await loadAllData();
+}
+
+function showAccessDenied(msg) {
+  document.getElementById('adminContent').innerHTML = `
+  <div style="text-align:center;padding:60px;color:var(--dim)">
+    <div style="font-size:2.5rem;margin-bottom:14px">🔒</div>
+    <div style="font-size:1rem;margin-bottom:8px">${msg}</div>
+    <p style="font-size:0.8rem;margin-bottom:16px">This area is for administrators only.</p>
+    <a href="../index.html" style="color:var(--cyan)">← Back to site</a>
+  </div>`;
+}
+
+function renderAdmin() {
+  document.getElementById('adminContent').innerHTML = `
+  <div class="admin-header">
+    <div>
+      <div class="admin-title">Admin Queue</div>
+      <span class="admin-badge">🔒 ADMIN ONLY</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <a href="../index.html" class="qa-btn">← Back to site</a>
+      <button class="qa-btn" onclick="loadAllData()">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <div class="admin-stats">
+    <div class="ast"><div class="ast-label">Pending</div><div class="ast-value" id="statPending" style="color:var(--yellow)">—</div></div>
+    <div class="ast"><div class="ast-label">Building</div><div class="ast-value" id="statBuilding" style="color:var(--cyan)">—</div></div>
+    <div class="ast"><div class="ast-label">Done Today</div><div class="ast-value" id="statDone" style="color:var(--green)">—</div></div>
+    <div class="ast"><div class="ast-label">Total Users</div><div class="ast-value" id="statUsers">—</div></div>
+    <div class="ast"><div class="ast-label">Premium</div><div class="ast-value" id="statPremium" style="color:var(--yellow)">—</div></div>
+    <div class="ast"><div class="ast-label">Reports</div><div class="ast-value" id="statReports" style="color:var(--red)">—</div></div>
+  </div>
+
+  <div class="admin-tabs">
+    <button class="atab active" onclick="showTab('queue',this)">📬 Queue</button>
+    <button class="atab" onclick="showTab('reports',this)">⚑ Reports</button>
+    <button class="atab" onclick="showTab('users',this)">👥 Users</button>
+  </div>
+
+  <div id="tab-queue" class="tab-panel active">
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="qa-btn" onclick="filterQueue('all')">All</button>
+      <button class="qa-btn" onclick="filterQueue('pending')">⏳ Pending</button>
+      <button class="qa-btn" onclick="filterQueue('building')">🔨 Building</button>
+      <button class="qa-btn" onclick="filterQueue('done')">✅ Done</button>
+    </div>
+    <div id="queueList">Loading...</div>
+  </div>
+  <div id="tab-reports" class="tab-panel"><div id="reportsList">Loading...</div></div>
+  <div id="tab-users" class="tab-panel"><div id="usersList">Loading...</div></div>`;
+}
+
+async function loadAllData() {
+  await Promise.all([loadQueue(), loadStats(), loadReports(), loadUsers()]);
+}
+
+async function loadQueue() {
+  const { data } = await sb.from('request_queue').select(`*, users:user_id(email, username)`).order('created_at',{ascending:false}).limit(100);
+  allQueue = data || [];
+  renderQueue();
+  document.getElementById('statPending').textContent = allQueue.filter(q => q.status === 'pending').length;
+  document.getElementById('statBuilding').textContent = allQueue.filter(q => q.status === 'building').length;
+  const today = new Date().toDateString();
+  document.getElementById('statDone').textContent = allQueue.filter(q => q.status === 'done' && new Date(q.created_at).toDateString() === today).length;
+}
+
+function renderQueue() {
+  const list = document.getElementById('queueList');
+  const filtered = queueFilter === 'all' ? allQueue : allQueue.filter(q => q.status === queueFilter);
+  if (filtered.length === 0) { list.innerHTML = '<p style="color:var(--dim);font-size:0.82rem">No items</p>'; return; }
+
+  list.innerHTML = filtered.map(q => {
+    const subj = SUBJECTS[q.subject] || { icon:'🔬' };
+    const user = q.users?.username || q.users?.email?.split('@')[0] || 'Unknown';
+    const prompt = `Build simulation: ${q.subject} - ${q.topic}\nLevel: College\nRequested by: ${user}\n${q.description ? 'Details: '+q.description : ''}\nFile: ${q.subject}_${q.topic.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'')}.html`;
+    return `
+    <div class="queue-item">
+      <div class="qi-header">
+        <div class="qi-topic">${subj.icon} ${q.topic}</div>
+        <span class="qi-status qs-${q.status}">${q.status.toUpperCase()}</span>
+      </div>
+      <div class="qi-meta">${q.subject} · Requested by ${user} · ${new Date(q.created_at).toLocaleString()}${q.description ? '<br>Note: '+q.description : ''}</div>
+      <div class="prompt-box" onclick="copyPrompt(this)"><span class="copy-hint">📋 Click to copy</span>${prompt}</div>
+      <div class="qi-actions" style="margin-top:10px">
+        ${q.status === 'pending' ? `<button class="qa-btn" onclick="updateStatus('${q.id}','building')">▶ Mark Building</button>` : ''}
+        ${q.status === 'building' ? `<button class="qa-btn success" onclick="updateStatus('${q.id}','done')">✅ Mark Done</button>` : ''}
+        <button class="qa-btn danger" onclick="deleteRequest('${q.id}')">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function copyPrompt(el) {
+  const text = el.textContent.replace('📋 Click to copy','').trim();
+  await navigator.clipboard.writeText(text);
+  const hint = el.querySelector('.copy-hint');
+  hint.textContent = '✅ Copied!';
+  setTimeout(() => hint.textContent = '📋 Click to copy', 2000);
+}
+
+function filterQueue(filter) { queueFilter = filter; renderQueue(); }
+
+async function updateStatus(id, status) {
+  await sb.from('request_queue').update({ status }).eq('id', id);
+  if (status === 'done') {
+    const item = allQueue.find(q => q.id === id);
+    if (item?.user_id) {
+      await sb.from('notifications').insert({
+        user_id: item.user_id,
+        type: 'simulation_ready',
+        message: `Your simulation "${item.topic}" is ready!`
+      });
+    }
+  }
+  await loadQueue();
+}
+
+async function deleteRequest(id) {
+  if (!confirm('Delete this request?')) return;
+  await sb.from('request_queue').delete().eq('id', id);
+  await loadQueue();
+}
+
+async function loadStats() {
+  try {
+    const { count: users } = await sb.from('users').select('*',{count:'exact',head:true});
+    document.getElementById('statUsers').textContent = users || 0;
+    const { count: premium } = await sb.from('users').select('*',{count:'exact',head:true}).eq('plan','premium');
+    document.getElementById('statPremium').textContent = premium || 0;
+  } catch(e) {}
+}
+
+async function loadReports() {
+  const { data } = await sb.from('comments').select('*').eq('is_reported', true).limit(50);
+  document.getElementById('statReports').textContent = data?.length || 0;
+  const list = document.getElementById('reportsList');
+  if (!data || data.length === 0) { list.innerHTML = '<p style="color:var(--dim);font-size:0.82rem">No reports</p>'; return; }
+  list.innerHTML = data.map(r => `
+  <div class="queue-item">
+    <div class="qi-header"><div class="qi-topic">⚑ ${r.content?.substring(0,120)}...</div></div>
+    <div class="qi-meta">Simulation: ${r.simulation_id} · ${new Date(r.created_at).toLocaleDateString()}</div>
+    <div class="qi-actions">
+      <button class="qa-btn danger" onclick="deleteComment('${r.id}')">🗑 Delete</button>
+      <button class="qa-btn" onclick="dismissReport('${r.id}')">✓ Dismiss</button>
+    </div>
+  </div>`).join('');
+}
+
+async function deleteComment(id) {
+  if (!confirm('Delete this comment?')) return;
+  await sb.from('comments').delete().eq('id', id);
+  await loadReports();
+}
+
+async function dismissReport(id) {
+  await sb.from('comments').update({ is_reported: false }).eq('id', id);
+  await loadReports();
+}
+
+async function loadUsers() {
+  const { data } = await sb.from('users').select('*').order('created_at',{ascending:false}).limit(50);
+  const list = document.getElementById('usersList');
+  if (!data) return;
+  list.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.78rem">
+    <tr style="color:var(--dim);border-bottom:1px solid var(--border)">
+      <th style="padding:8px;text-align:left">User</th>
+      <th style="padding:8px;text-align:left">Plan</th>
+      <th style="padding:8px;text-align:left">Credits</th>
+      <th style="padding:8px;text-align:left">Requests</th>
+      <th style="padding:8px;text-align:left">Joined</th>
+    </tr>
+    ${data.map(u => `
+    <tr style="border-bottom:1px solid rgba(26,40,64,0.4)">
+      <td style="padding:8px">${u.username || u.email}${u.is_admin ? ' 🛡️' : ''}</td>
+      <td style="padding:8px"><span style="color:${u.plan==='premium'?'var(--yellow)':'var(--dim)'}">${u.plan}</span></td>
+      <td style="padding:8px">${u.credits || 0}</td>
+      <td style="padding:8px">${u.monthly_requests_used || 0}/5</td>
+      <td style="padding:8px;color:var(--dim)">${new Date(u.created_at).toLocaleDateString()}</td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.atab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+init();
+</script>
+</body>
+</html>
