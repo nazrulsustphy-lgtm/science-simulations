@@ -25,21 +25,38 @@ const LEMON_SQUEEZY = {
   credits_url: 'REPLACE_WITH_LEMON_SQUEEZY_CREDITS_URL'
 };
 
-// ── SINGLE SUPABASE CLIENT INSTANCE ──
+// ── SINGLE SUPABASE CLIENT INSTANCE (strict singleton) ──
 let _sb = null;
+let _authListenerAttached = false;
+
 function getSupabase() {
-  if (!_sb && window.supabase) {
-    const { createClient } = window.supabase;
-    _sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
+  if (_sb) return _sb;
+  if (!window.supabase) return null;
+  const { createClient } = window.supabase;
+  _sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'sb-scisim-auth'
+    }
+  });
   return _sb;
 }
 
-// Global reference
+// Global reference (set once, lazily)
 let sb = null;
-document.addEventListener('DOMContentLoaded', () => { sb = getSupabase(); });
-// Also set immediately if supabase is loaded
-if (window.supabase) sb = getSupabase();
+function initSupabase() {
+  if (!sb) sb = getSupabase();
+  return sb;
+}
+
+// Try init immediately, fallback to DOMContentLoaded
+if (window.supabase) {
+  initSupabase();
+} else {
+  document.addEventListener('DOMContentLoaded', initSupabase);
+}
 
 // ── LOCAL STORAGE CACHE ──
 const CACHE = {
