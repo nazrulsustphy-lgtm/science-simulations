@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — Free, Premium Plans | SciSim</title>
+<meta name="description" content="SciSim pricing: Free plan and Premium $4.99/month or $39/year. 7-day free trial. Unlock 560+ simulations and custom requests.">
+<link rel="canonical" href="https://nazrulsustphy-lgtm.github.io/science-simulations/pricing.html">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<style>
+.pricing-header { padding:100px 24px 48px; text-align:center; max-width:680px; margin:0 auto; }
+.pricing-title { font-family:'Syne',sans-serif; font-size:clamp(2rem,5vw,3rem); font-weight:800; margin-bottom:14px; }
+.pricing-sub { font-size:1rem; color:var(--dim); line-height:1.7; }
+.trial-badge { display:inline-block; font-size:0.72rem; color:var(--green); background:rgba(0,230,118,0.08); border:1px solid rgba(0,230,118,0.2); padding:5px 14px; border-radius:20px; margin-bottom:20px; }
+
+.billing-toggle { display:flex; align-items:center; justify-content:center; gap:14px; margin:24px 0; }
+.toggle-label { font-size:0.85rem; color:var(--dim); }
+.toggle-label.active { color:var(--text); }
+.toggle-switch { width:44px; height:24px; border-radius:12px; background:var(--border2); position:relative; cursor:pointer; transition:background 0.3s; }
+.toggle-switch.on { background:var(--cyan); }
+.toggle-knob { width:18px; height:18px; border-radius:50%; background:white; position:absolute; top:3px; left:3px; transition:transform 0.3s; }
+.toggle-switch.on .toggle-knob { transform:translateX(20px); }
+.discount-badge { font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(0,230,118,0.15); color:var(--green); border:1px solid rgba(0,230,118,0.2); }
+
+.plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; max-width:960px; margin:0 auto; padding:0 24px 80px; }
+.plan-card { background:var(--s1); border:1px solid var(--border); border-radius:20px; padding:28px; position:relative; }
+.plan-card.featured { border-color:var(--cyan); background:linear-gradient(135deg,rgba(0,207,255,0.06),var(--s1)); }
+.plan-featured-badge { position:absolute; top:-12px; left:50%; transform:translateX(-50%); font-size:0.65rem; font-weight:700; padding:4px 14px; border-radius:20px; background:var(--cyan); color:var(--bg); }
+.plan-name { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:6px; }
+.plan-price { font-family:'Syne',sans-serif; font-size:2.6rem; font-weight:800; line-height:1; margin:12px 0 4px; }
+.plan-price sup { font-size:1rem; vertical-align:top; margin-top:8px; }
+.plan-price span { font-size:0.85rem; font-weight:400; color:var(--dim); }
+.plan-period { font-size:0.75rem; color:var(--dim); margin-bottom:20px; }
+.plan-desc { font-size:0.82rem; color:var(--dim); line-height:1.6; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+.plan-features { list-style:none; margin-bottom:28px; }
+.plan-features li { font-size:0.82rem; padding:8px 0; display:flex; align-items:flex-start; gap:10px; border-bottom:1px solid rgba(255,255,255,0.03); }
+.plan-features li:last-child { border-bottom:none; }
+.feat-check { color:var(--green); flex-shrink:0; margin-top:1px; }
+.feat-x { color:var(--muted); flex-shrink:0; }
+.plan-btn { width:100%; padding:13px 24px; border-radius:12px; border:none; font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer; text-decoration:none; display:block; text-align:center; transition:all 0.2s; }
+.plan-btn-primary { background:var(--cyan); color:var(--bg); }
+.plan-btn-primary:hover { background:#33d9ff; }
+.plan-btn-ghost { background:transparent; border:1px solid var(--border2); color:var(--text); }
+
+.credits-section { max-width:960px; margin:0 auto; padding:0 24px 80px; }
+.credits-card { background:var(--s1); border:1px solid var(--border); border-radius:20px; padding:32px; display:flex; align-items:center; gap:32px; flex-wrap:wrap; }
+.credits-info { flex:1; min-width:240px; }
+.credits-title { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:700; margin-bottom:8px; }
+.credits-desc { font-size:0.85rem; color:var(--dim); line-height:1.6; }
+.credits-price { font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; color:var(--yellow); margin:12px 0; }
+
+.faq-section { max-width:680px; margin:0 auto; padding:0 24px 80px; }
+.faq-title { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:700; margin-bottom:24px; text-align:center; }
+.faq-item { border-bottom:1px solid var(--border); }
+.faq-q { padding:16px 0; font-size:0.88rem; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; gap:12px; }
+.faq-q::after { content:'↓'; color:var(--dim); transition:transform 0.2s; }
+.faq-item.open .faq-q::after { transform:rotate(180deg); }
+.faq-a { font-size:0.82rem; color:var(--dim); line-height:1.7; padding-bottom:16px; display:none; }
+.faq-item.open .faq-a { display:block; }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <div class="pricing-header">
+    <div class="trial-badge">🎉 7-day free trial on Premium · No credit card required</div>
+    <h1 class="pricing-title">Simple, transparent pricing</h1>
+    <p class="pricing-sub">Start free. Upgrade when you need more. No hidden fees.</p>
+    <div class="billing-toggle">
+      <span class="toggle-label active" id="monthlyLabel">Monthly</span>
+      <div class="toggle-switch" id="billingToggle" onclick="toggleBilling()"><div class="toggle-knob"></div></div>
+      <span class="toggle-label" id="yearlyLabel">Yearly <span class="discount-badge">Save 35%</span></span>
+    </div>
+    <p id="currencyNote" style="font-size:0.7rem;color:var(--muted);margin-top:8px"></p>
+  </div>
+
+  <div class="plans-grid">
+    <div class="plan-card">
+      <div class="plan-name">Free</div>
+      <div class="plan-price"><sup>$</sup>0</div>
+      <div class="plan-period">Forever free</div>
+      <div class="plan-desc">Perfect for students exploring science simulations.</div>
+      <ul class="plan-features">
+        <li><span class="feat-check">✓</span>Browse all 13 categories</li>
+        <li><span class="feat-check">✓</span>5 simulations per day</li>
+        <li><span class="feat-check">✓</span>Basic & Advanced quizzes</li>
+        <li><span class="feat-check">✓</span>Comment & discuss</li>
+        <li><span class="feat-check">✓</span>Save favorites</li>
+        <li><span class="feat-x">✗</span>Unlimited access</li>
+        <li><span class="feat-x">✗</span>Custom simulation requests</li>
+      </ul>
+      <a class="plan-btn plan-btn-ghost" href="auth.html">Get started free</a>
+    </div>
+
+    <div class="plan-card featured">
+      <div class="plan-featured-badge">⭐ Most Popular</div>
+      <div class="plan-name" style="color:var(--cyan)">Premium</div>
+      <div class="plan-price" style="color:var(--cyan)" id="premiumPrice"><sup>$</sup>4.99<span>/mo</span></div>
+      <div class="plan-period" id="premiumPeriod">7-day free trial · Cancel anytime</div>
+      <div class="plan-desc">Everything you need to master science through interactive learning.</div>
+      <ul class="plan-features">
+        <li><span class="feat-check">✓</span>Unlimited access to all 560+ sims</li>
+        <li><span class="feat-check">✓</span>5 free custom requests/month</li>
+        <li><span class="feat-check">✓</span>All quiz types (Basic/Advanced/Math)</li>
+        <li><span class="feat-check">✓</span>Early access to new simulations</li>
+        <li><span class="feat-check">✓</span>Leaderboard access</li>
+        <li><span class="feat-check">✓</span>Priority support</li>
+        <li><span class="feat-check">✓</span>Cancel anytime</li>
+      </ul>
+      <a class="plan-btn plan-btn-primary" href="#" onclick="handlePremiumCheckout()">Start 7-day Free Trial →</a>
+    </div>
+  </div>
+
+  <div class="credits-section">
+    <div class="credits-card">
+      <div class="credits-info">
+        <div class="credits-title">💎 Need more requests?</div>
+        <div class="credits-desc">Already Premium but need more custom simulations? Buy credits — one-time purchase, never expires.</div>
+        <div class="credits-price">$10 <span style="font-size:0.9rem;color:var(--dim);font-weight:400">= 100 requests</span></div>
+      </div>
+      <a class="plan-btn plan-btn-ghost" style="max-width:200px" href="#" onclick="handleCreditsCheckout()">Buy Credits →</a>
+    </div>
+  </div>
+
+  <div class="faq-section">
+    <h2 class="faq-title">Frequently Asked Questions</h2>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How does the 7-day free trial work?</div><div class="faq-a">Sign up and start your Premium trial with full access to everything. No credit card required. After 7 days, you can choose to continue with Premium or go back to Free — whichever suits you.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Can I cancel anytime?</div><div class="faq-a">Yes, cancel your Premium subscription anytime from your dashboard. You'll keep access until the end of your billing period.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What happens if I cancel Premium?</div><div class="faq-a">Your account switches to Free plan after the billing period ends. You keep all your saved data, favorites, and quiz history. Unused monthly requests expire, but credit pack requests never expire.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How long does a custom simulation take?</div><div class="faq-a">Typically same day. Queue position depends on current demand. You'll be notified by email and website notification when ready.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Are simulations scientifically accurate?</div><div class="faq-a">Yes. Every simulation goes through a 6-pillar quality check including scientific accuracy (minimum 8/10 score). Users can also report any errors they find.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Do you offer refunds?</div><div class="faq-a">Since we offer a 7-day free trial, all paid subscriptions are non-refundable. However, you can cancel anytime and your access continues until the end of the billing period.</div></div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">⚛ SciSim</div>
+  <div class="footer-links">
+    <a class="footer-link" href="index.html">Home</a>
+    <a class="footer-link" href="browse.html">Browse</a>
+    <a class="footer-link" href="privacy.html">Privacy</a>
+    <a class="footer-link" href="terms.html">Terms</a>
+  </div>
+  <p class="footer-copy">© 2026 SciSim</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/shared.js"></script>
+<script>
+let isYearly = false;
+
+async function init() {
+  renderNav('pricing');
+  initCookieBanner();
+  await renderNavAuth();
+  await updateMobileMenu();
+  showCurrency();
+}
+
+async function showCurrency() {
+  const currency = await detectCurrency();
+  if (currency.code !== 'USD') {
+    document.getElementById('currencyNote').textContent = `Prices shown in USD · Detected: ${currency.code} · Converted at checkout`;
+  }
+}
+
+function toggleBilling() {
+  isYearly = !isYearly;
+  document.getElementById('billingToggle').classList.toggle('on', isYearly);
+  document.getElementById('monthlyLabel').classList.toggle('active', !isYearly);
+  document.getElementById('yearlyLabel').classList.toggle('active', isYearly);
+  const price = document.getElementById('premiumPrice');
+  const period = document.getElementById('premiumPeriod');
+  if (isYearly) {
+    price.innerHTML = '<sup>$</sup>3.25<span>/mo</span>';
+    period.textContent = '$39 billed yearly · Save $21 · 7-day trial';
+  } else {
+    price.innerHTML = '<sup>$</sup>4.99<span>/mo</span>';
+    period.textContent = '7-day free trial · Cancel anytime';
+  }
+}
+
+async function handlePremiumCheckout() {
+  const user = await getCurrentUser();
+  if (!user) { window.location.href = 'auth.html?redirect=pricing.html'; return; }
+  const url = isYearly ? LEMON_SQUEEZY.yearly_url : LEMON_SQUEEZY.monthly_url;
+  if (url && !url.includes('REPLACE')) {
+    window.open(url + '?checkout[email]=' + encodeURIComponent(user.email), '_blank');
+  } else {
+    alert('Payment integration coming soon!');
+  }
+}
+
+async function handleCreditsCheckout() {
+  const user = await getCurrentUser();
+  if (!user) { window.location.href = 'auth.html?redirect=pricing.html'; return; }
+  const url = LEMON_SQUEEZY.credits_url;
+  if (url && !url.includes('REPLACE')) {
+    window.open(url + '?checkout[email]=' + encodeURIComponent(user.email), '_blank');
+  } else {
+    alert('Payment integration coming soon!');
+  }
+}
+
+function toggleFaq(el) { el.closest('.faq-item').classList.toggle('open'); }
+init();
+</script>
+</body>
+</html>

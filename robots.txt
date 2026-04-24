@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+
+Sitemap: https://nazrulsustphy-lgtm.github.io/science-simulations/sitemap.xml

@@ -1,0 +1,38 @@
+# Science Simulation Platform — SciSim
+> Interactive 3D educational simulations for students worldwide.
+> High School to University level content.
+> Physics, Math, Chemistry, Biology, Geography, Astronomy, Computer Science,
+> Engineering, Neuroscience, Economics, Environmental Science, Interdisciplinary.
+
+## What we offer
+- 560+ interactive 3D simulations built with Three.js and Canvas API
+- Real-time parameter controls and live formula display
+- Self-assessment quizzes (Basic, Advanced, Math MCQ)
+- Detailed explanations and FAQ for every simulation
+- Custom simulation requests for Premium users
+- Discussion/comment system on every simulation
+
+## Subjects
+- Physics: Mechanics, Waves & Optics, Electricity & Magnetism, Thermodynamics, Modern Physics
+- Mathematics: Algebra, Calculus, Geometry, Trigonometry, Statistics, Chaos Theory
+- Chemistry: Atomic Structure, Bonding, Thermochemistry, Equilibrium, Electrochemistry
+- Biology: Cell Biology, Genetics, Human Physiology, Plant Biology, Ecology
+- Geography: Physical Geography, Earth Science, Atmospheric Science
+- Astronomy: Solar System, Stellar Physics, Cosmology, Space Mechanics
+- Computer Science: Algorithms, Data Structures, Networking, AI & ML
+- Engineering: Electrical, Mechanical, Civil, Aerospace
+- Neuroscience: Brain & Neural, Cognitive Science, Psychology
+- Economics: Microeconomics, Finance, Game Theory, Macroeconomics
+- Environmental: Ecosystems, Climate Science, Renewable Energy
+- Interdisciplinary: Cross-subject simulations
+- Trending: Current science and technology topics
+
+## Access
+- Free: Limited daily access, comment system
+- Premium: Full unlimited access + custom simulation requests ($5/month or $36/year)
+
+## Simulation Index
+Full list available at: /data/index.json
+
+## Website
+https://nazrulsustphy-lgtm.github.io/science-simulations/

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request Custom Simulation — SciSim</title>
+<meta name="description" content="Premium members can request custom science simulations. We build it for you same-day.">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<style>
+.request-page { max-width:680px; margin:0 auto; padding:100px 24px 80px; position:relative; z-index:1; }
+.request-title { font-family:'Syne',sans-serif; font-size:clamp(1.8rem,4vw,2.4rem); font-weight:800; margin-bottom:10px; }
+.request-sub { font-size:0.9rem; color:var(--dim); line-height:1.6; margin-bottom:36px; }
+.credits-info { background:var(--s1); border:1px solid var(--border2); border-radius:14px; padding:18px 20px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.credits-left { font-size:0.82rem; color:var(--dim); }
+.credits-left strong { color:var(--cyan); font-size:1rem; }
+.buy-credits-btn { font-size:0.75rem; padding:7px 14px; border-radius:8px; border:1px solid rgba(0,207,255,0.3); background:transparent; color:var(--cyan); cursor:pointer; text-decoration:none; }
+
+.form-group { margin-bottom:20px; }
+.form-label { font-size:0.8rem; font-weight:600; margin-bottom:8px; display:block; }
+.form-input, .form-select, .form-textarea { width:100%; background:var(--s1); border:1px solid var(--border2); border-radius:10px; padding:12px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.88rem; outline:none; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--cyan); }
+.form-textarea { resize:vertical; min-height:100px; }
+
+.subject-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; }
+.subject-option { padding:10px; border-radius:10px; border:1px solid var(--border); background:transparent; color:var(--dim); font-size:0.78rem; cursor:pointer; text-align:center; }
+.subject-option.selected { border-color:var(--cyan); color:var(--cyan); background:rgba(0,207,255,0.08); }
+
+.submit-btn { width:100%; padding:15px; border-radius:12px; border:none; background:var(--cyan); color:var(--bg); font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; cursor:pointer; }
+.submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+.success-box { background:rgba(0,230,118,0.08); border:1px solid rgba(0,230,118,0.2); border-radius:16px; padding:28px; text-align:center; display:none; }
+.success-icon { font-size:2.5rem; margin-bottom:12px; }
+.success-title { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:700; color:var(--green); margin-bottom:8px; }
+
+.premium-gate { background:var(--s1); border:1px solid var(--border2); border-radius:16px; padding:40px; text-align:center; }
+.pg-icon { font-size:2.5rem; margin-bottom:16px; }
+.pg-title { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:700; margin-bottom:10px; }
+.pg-text { font-size:0.85rem; color:var(--dim); line-height:1.6; margin-bottom:24px; }
+</style>
+</head>
+<body>
+
+<div class="request-page">
+  <h1 class="request-title">Request a Simulation</h1>
+  <p class="request-sub">Can't find what you need? We'll build it for you — typically same day. All Premium users will see your simulation once ready.</p>
+  <div id="mainContent"></div>
+</div>
+
+<footer>
+  <div class="footer-logo">⚛ SciSim</div>
+  <div class="footer-links">
+    <a class="footer-link" href="index.html">Home</a>
+    <a class="footer-link" href="browse.html">Browse</a>
+    <a class="footer-link" href="pricing.html">Pricing</a>
+  </div>
+  <p class="footer-copy">© 2026 SciSim</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/freemium.js"></script>
+<script src="assets/js/shared.js"></script>
+<script>
+let userProfile = null;
+let selectedSubject = '';
+
+async function init() {
+  renderNav();
+  initCookieBanner();
+  await renderNavAuth();
+  await updateMobileMenu();
+  const user = await getCurrentUser();
+  const content = document.getElementById('mainContent');
+
+  if (!user) {
+    content.innerHTML = `<div class="premium-gate">
+      <div class="pg-icon">🔒</div>
+      <div class="pg-title">Sign in required</div>
+      <div class="pg-text">You need a Premium account to request custom simulations.</div>
+      <a class="btn-lg btn-lg-primary" href="auth.html?redirect=request.html">Sign in</a>
+    </div>`;
+    return;
+  }
+  userProfile = await getUserProfile(user.id);
+
+  if (!userProfile || userProfile.plan !== 'premium') {
+    content.innerHTML = `<div class="premium-gate">
+      <div class="pg-icon">⭐</div>
+      <div class="pg-title">Premium required</div>
+      <div class="pg-text">Custom simulation requests are available for Premium subscribers. Start with a 7-day free trial!</div>
+      <a class="btn-lg btn-lg-primary" href="pricing.html" style="display:inline-flex">Start Free Trial →</a>
+    </div>`;
+    return;
+  }
+  renderForm(user, userProfile);
+}
+
+function renderForm(user, profile) {
+  const freeLeft = Math.max(0, 5 - (profile.monthly_requests_used || 0));
+  const creditsLeft = profile.credits || 0;
+  const total = freeLeft + creditsLeft;
+
+  document.getElementById('mainContent').innerHTML = `
+  <div class="credits-info">
+    <div class="credits-left">Requests available: <strong>${total}</strong>
+      <span style="margin-left:12px;font-size:0.72rem">(${freeLeft} free · ${creditsLeft} credits)</span>
+    </div>
+    ${creditsLeft < 10 ? `<a class="buy-credits-btn" href="pricing.html">+ Buy Credits</a>` : ''}
+  </div>
+
+  <div id="requestForm" ${total === 0 ? 'style="opacity:0.5;pointer-events:none"' : ''}>
+    <div class="form-group">
+      <label class="form-label">Topic / Title *</label>
+      <input class="form-input" id="topicInput" type="text" placeholder="e.g. Quantum Tunneling, Krebs Cycle..." maxlength="120">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Subject *</label>
+      <div class="subject-grid" id="subjectGrid">
+        ${Object.entries(SUBJECTS).map(([key,val]) => `
+        <button class="subject-option" data-subject="${key}" onclick="selectSubject('${key}',this)">${val.icon} ${val.label}</button>`).join('')}
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Level</label>
+      <select class="form-select" id="levelSelect">
+        <option value="high_school">High School</option>
+        <option value="college" selected>College / A-Level</option>
+        <option value="university">University</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description (optional)</label>
+      <textarea class="form-textarea" id="descInput" placeholder="Any specific aspects to visualize? Formulas? Concepts?" maxlength="500"></textarea>
+    </div>
+    <button class="submit-btn" id="submitBtn" onclick="submitRequest()">Submit Request →</button>
+  </div>
+
+  <div class="success-box" id="successBox">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Request submitted!</div>
+    <div style="font-size:0.85rem;color:var(--dim);line-height:1.6">You'll receive a notification when the simulation is ready.<br><br>
+    <a href="dashboard.html" style="color:var(--cyan)">View your requests →</a></div>
+  </div>`;
+}
+
+function selectSubject(subject, btn) {
+  selectedSubject = subject;
+  document.querySelectorAll('.subject-option').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+async function submitRequest() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) { alert('Please enter a topic'); return; }
+  if (!selectedSubject) { alert('Please select a subject'); return; }
+
+  const check = await canMakeRequest();
+  if (!check.allowed) { alert('Cannot submit request. Check your plan.'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  const user = await getCurrentUser();
+  const { error } = await sb.from('request_queue').insert({
+    user_id: user.id, topic, subject: selectedSubject,
+    description: document.getElementById('descInput').value.trim(),
+    status: 'pending', priority: 1
+  });
+
+  if (error) { btn.disabled = false; btn.textContent = 'Submit Request →'; alert('Error. Try again.'); return; }
+
+  if (check.type === 'free') {
+    await sb.from('users').update({ monthly_requests_used: (userProfile.monthly_requests_used||0) + 1 }).eq('id', user.id);
+  } else {
+    await sb.from('users').update({ credits: (userProfile.credits||0) - 1 }).eq('id', user.id);
+  }
+  CACHE.clear('profile_' + user.id);
+
+  document.getElementById('requestForm').style.display = 'none';
+  document.getElementById('successBox').style.display = 'block';
+}
+
+init();
+</script>
+</body>
+</html>

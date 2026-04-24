@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse Simulations — Filter, Search, Sort | SciSim</title>
+<meta name="description" content="Browse 560+ interactive science simulations. Filter by subject, sort by views or date, search by keyword.">
+<link rel="canonical" href="https://nazrulsustphy-lgtm.github.io/science-simulations/browse.html">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<style>
+.browse-header { padding:80px 24px 40px; max-width:1200px; margin:0 auto; }
+.browse-title { font-family:'Syne',sans-serif; font-size:clamp(1.8rem,4vw,2.8rem); font-weight:800; margin-bottom:8px; }
+.browse-sub { font-size:0.9rem; color:var(--dim); }
+
+.filter-bar { background:var(--s1); border:1px solid var(--border); border-radius:16px; padding:16px 20px; margin-bottom:20px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.filter-group { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.filter-label { font-size:0.68rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; white-space:nowrap; }
+.filter-btn { font-size:0.75rem; padding:6px 12px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--dim); cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+.filter-btn:hover { border-color:var(--border2); color:var(--text); }
+.filter-btn.active { border-color:var(--cyan); color:var(--cyan); background:rgba(0,207,255,0.08); }
+.filter-divider { width:1px; height:24px; background:var(--border); }
+.sort-select { font-size:0.78rem; padding:7px 12px; border-radius:8px; border:1px solid var(--border); background:var(--s2); color:var(--text); cursor:pointer; outline:none; }
+.search-bar { flex:1; min-width:200px; position:relative; }
+.search-bar input { width:100%; background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:8px 12px 8px 34px; font-size:0.8rem; color:var(--text); outline:none; font-family:'DM Sans',sans-serif; }
+.search-bar input:focus { border-color:var(--cyan); }
+.search-bar .s-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:0.85rem; color:var(--dim); }
+
+.subcat-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; }
+.subcat-btn { font-size:0.72rem; padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--dim); cursor:pointer; transition:all 0.2s; }
+.subcat-btn:hover { color:var(--text); border-color:var(--border2); }
+
+.results-info { font-size:0.78rem; color:var(--dim); margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; }
+.sim-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+.sim-card { background:var(--s1); border:1px solid var(--border); border-radius:16px; overflow:hidden; transition:all 0.2s; text-decoration:none; color:var(--text); display:flex; flex-direction:column; position:relative; }
+.sim-card:hover { transform:translateY(-4px); border-color:var(--border2); box-shadow:0 12px 40px rgba(0,0,0,0.4); }
+.sim-thumb { height:120px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; position:relative; }
+.sim-free-badge { position:absolute; top:8px; right:8px; font-size:0.58rem; font-weight:700; padding:2px 7px; border-radius:6px; background:rgba(0,230,118,0.2); color:var(--green); border:1px solid rgba(0,230,118,0.3); }
+.sim-body { padding:12px 14px 14px; flex:1; }
+.sim-subject { font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:5px; }
+.sim-title { font-family:'Syne',sans-serif; font-size:0.88rem; font-weight:700; margin-bottom:4px; line-height:1.3; }
+.sim-cat { font-size:0.7rem; color:var(--dim); }
+.sim-footer { display:flex; align-items:center; justify-content:space-between; padding:8px 14px; border-top:1px solid var(--border); }
+.sim-views { font-size:0.65rem; color:var(--dim); }
+.sim-arrow { font-size:0.72rem; color:var(--dim); transition:all 0.2s; }
+.sim-card:hover .sim-arrow { color:var(--cyan); transform:translateX(4px); }
+.load-more-wrap { text-align:center; margin-top:40px; }
+.load-more-btn { font-size:0.85rem; padding:12px 32px; border-radius:10px; border:1px solid var(--border2); background:transparent; color:var(--text); cursor:pointer; transition:all 0.2s; }
+.load-more-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+@media(max-width:768px) { .filter-divider { display:none; } .browse-header { padding:80px 16px 28px; } }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <div class="browse-header">
+    <h1 class="browse-title">Browse Simulations</h1>
+    <p class="browse-sub">Explore all subjects · Filter · Sort · Search</p>
+  </div>
+
+  <div class="section">
+    <div class="filter-bar">
+      <div class="search-bar">
+        <span class="s-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search simulations...">
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group" id="subjectFilters">
+        <span class="filter-label">Subject</span>
+        <button class="filter-btn active" data-subject="all" onclick="setSubject('all',this)">All</button>
+      </div>
+      <div class="filter-divider"></div>
+      <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+        <option value="views">Most Viewed</option>
+        <option value="date">Newest</option>
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+      </select>
+    </div>
+    <div class="subcat-bar" id="subcatBar" style="display:none"></div>
+    <div class="results-info">
+      <span id="resultsCount">Loading...</span>
+    </div>
+    <div class="sim-grid" id="simGrid">
+      <div style="height:200px;border-radius:16px" class="skeleton"></div>
+      <div style="height:200px;border-radius:16px" class="skeleton"></div>
+      <div style="height:200px;border-radius:16px" class="skeleton"></div>
+      <div style="height:200px;border-radius:16px" class="skeleton"></div>
+    </div>
+    <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+      <button class="load-more-btn" onclick="loadMore()">Load more simulations</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">⚛ SciSim</div>
+  <div class="footer-links">
+    <a class="footer-link" href="index.html">Home</a>
+    <a class="footer-link" href="pricing.html">Pricing</a>
+    <a class="footer-link" href="privacy.html">Privacy</a>
+    <a class="footer-link" href="terms.html">Terms</a>
+  </div>
+  <p class="footer-copy">© 2026 SciSim</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/shared.js"></script>
+<script>
+let allSims = [];
+let filtered = [];
+let currentSubject = 'all';
+let currentSubcat = 'all';
+let displayCount = 24;
+let viewCounts = {};
+
+const SUBCATEGORIES = {
+  physics:['Mechanics','Waves & Optics','Electricity & Magnetism','Thermodynamics','Modern Physics'],
+  math:['Algebra','Calculus','Geometry','Trigonometry','Statistics','Chaos Theory'],
+  chemistry:['Atomic Structure','Chemical Bonding','Thermochemistry','Equilibrium','Electrochemistry','Organic'],
+  biology:['Cell Biology','Genetics','Human Physiology','Plant Biology','Ecology','Biochemistry'],
+  geography:['Physical Geography','Earth Science','Atmospheric Science','Cartography'],
+  astronomy:['Solar System','Stellar Physics','Cosmology','Space Mechanics'],
+  cs:['Algorithms','Data Structures','Networking','AI & ML'],
+  engineering:['Electrical','Mechanical','Civil','Aerospace'],
+  neuroscience:['Brain & Neural','Cognitive Science','Psychology'],
+  economics:['Microeconomics','Finance','Game Theory','Macroeconomics'],
+  environmental:['Ecosystems','Climate Science','Renewable Energy'],
+  interdisciplinary:['Physics+Math','Physics+Chemistry','Chemistry+Biology','Math+Biology','Multi-subject']
+};
+
+async function init() {
+  renderNav('browse');
+  initCookieBanner();
+  renderSubjectFilters();
+  await renderNavAuth();
+  await updateMobileMenu();
+  await loadData();
+  parseURLParams();
+}
+
+function renderSubjectFilters() {
+  const container = document.getElementById('subjectFilters');
+  Object.entries(SUBJECTS).forEach(([key,val]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.dataset.subject = key;
+    btn.innerHTML = `${val.icon} ${val.label}`;
+    btn.onclick = () => setSubject(key, btn);
+    container.appendChild(btn);
+  });
+}
+
+async function loadData() {
+  allSims = await loadSimulationsData();
+  try {
+    const { data } = await sb.from('simulation_views').select('simulation_id').limit(10000);
+    if (data) data.forEach(v => { viewCounts[v.simulation_id] = (viewCounts[v.simulation_id]||0)+1; });
+  } catch(e) {}
+  applyFilters();
+}
+
+function parseURLParams() {
+  const params = new URLSearchParams(location.search);
+  const subject = params.get('subject');
+  const trending = params.get('trending');
+  const sort = params.get('sort');
+  if (subject) { const btn = document.querySelector(`[data-subject="${subject}"]`); if (btn) setSubject(subject, btn); }
+  if (trending) { const btn = document.querySelector(`[data-subject="trending"]`); if (btn) setSubject('trending', btn); }
+  if (sort) document.getElementById('sortSelect').value = sort;
+  applyFilters();
+}
+
+function setSubject(subject, btn) {
+  currentSubject = subject;
+  currentSubcat = 'all';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSubcatBar(subject);
+  applyFilters();
+}
+
+function renderSubcatBar(subject) {
+  const bar = document.getElementById('subcatBar');
+  const cats = SUBCATEGORIES[subject];
+  if (!cats || subject === 'all') { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML = `<button class="subcat-btn active" onclick="setSubcat('all',this)">All</button>` +
+    cats.map(c => `<button class="subcat-btn" onclick="setSubcat('${c}',this)">${c}</button>`).join('');
+}
+
+function setSubcat(subcat, btn) {
+  currentSubcat = subcat;
+  document.querySelectorAll('.subcat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const sort = document.getElementById('sortSelect').value;
+
+  filtered = allSims.filter(s => {
+    if (currentSubject !== 'all' && s.subject !== currentSubject) return false;
+    if (currentSubcat !== 'all' && s.subcategory !== currentSubcat) return false;
+    if (q && !s.title?.toLowerCase().includes(q) &&
+        !s.subject?.toLowerCase().includes(q) &&
+        !s.tags?.some(t => t.toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  filtered.sort((a,b) => {
+    if (sort==='views') return (viewCounts[b.id]||0)-(viewCounts[a.id]||0);
+    if (sort==='date') return new Date(b.date_added||0)-new Date(a.date_added||0);
+    if (sort==='az') return a.title?.localeCompare(b.title);
+    if (sort==='za') return b.title?.localeCompare(a.title);
+    return 0;
+  });
+
+  displayCount = 24;
+  renderGrid();
+  updateInfo();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('simGrid');
+  const slice = filtered.slice(0, displayCount);
+
+  if (slice.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="icon">🔭</div>
+      <h3>No simulations found</h3>
+      <p>Try a different search term or filter. More simulations are added daily.</p>
+      <div class="suggestions">
+        <a class="sg-link" href="browse.html">Browse All</a>
+        <a class="sg-link" href="browse.html?subject=physics">Physics</a>
+        <a class="sg-link" href="browse.html?subject=math">Math</a>
+        <a class="sg-link" href="request.html">Request Simulation</a>
+      </div>
+    </div>`;
+    document.getElementById('loadMoreWrap').style.display = 'none';
+    return;
+  }
+
+  grid.innerHTML = slice.map((sim,i) => {
+    const subj = SUBJECTS[sim.subject] || { icon:'🔬', color:'#00cfff' };
+    const views = viewCounts[sim.id] || sim.view_count || 0;
+    return `
+    <a class="sim-card fade-in" href="simulation.html?id=${sim.id}" style="animation-delay:${(i%24)*0.03}s">
+      <div class="sim-thumb" style="background:linear-gradient(135deg,${subj.color}18,${subj.color}06)">
+        <span>${subj.icon}</span>
+        ${sim.is_free ? '<span class="sim-free-badge">FREE</span>' : ''}
+      </div>
+      <div class="sim-body">
+        <div class="sim-subject" style="color:${subj.color}">${sim.subject?.toUpperCase()}</div>
+        <div class="sim-title">${sim.title}</div>
+        <div class="sim-cat">${sim.subcategory||''}</div>
+      </div>
+      <div class="sim-footer">
+        <span class="sim-views">👁 ${views.toLocaleString()}</span>
+        <span class="sim-arrow">→</span>
+      </div>
+    </a>`;
+  }).join('');
+
+  document.getElementById('loadMoreWrap').style.display = filtered.length > displayCount ? 'block' : 'none';
+}
+
+function loadMore() { displayCount += 24; renderGrid(); }
+function updateInfo() { document.getElementById('resultsCount').textContent = `${filtered.length} simulation${filtered.length !== 1 ? 's' : ''}`; }
+
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(applyFilters, 200);
+});
+
+init();
+</script>
+</body>
+</html>

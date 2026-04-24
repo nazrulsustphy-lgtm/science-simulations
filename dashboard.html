@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — SciSim</title>
+<meta name="description" content="Your SciSim dashboard. Track your progress, manage custom requests, view favorites, and control your account.">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<style>
+.dash-page { max-width:1000px; margin:0 auto; padding:100px 24px 80px; position:relative; z-index:1; }
+.dash-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:36px; }
+.dash-greeting { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; }
+.dash-plan { display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--dim); }
+.plan-badge { font-size:0.68rem; font-weight:700; padding:3px 10px; border-radius:20px; }
+.plan-free { background:rgba(107,127,160,0.15); color:var(--dim); }
+.plan-premium { background:rgba(255,215,64,0.15); color:var(--yellow); }
+
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:36px; }
+.stat-card { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:18px; }
+.stat-label { font-size:0.68rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+.stat-value { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; }
+
+.dash-tabs { display:flex; gap:6px; margin-bottom:24px; border-bottom:1px solid var(--border); overflow-x:auto; }
+.dash-tab { font-size:0.82rem; font-weight:600; padding:10px 16px; cursor:pointer; color:var(--dim); border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none; white-space:nowrap; }
+.dash-tab.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+.request-item, .quiz-item, .notif-item, .fav-item { background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; }
+.ri-status { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.ri-status.pending { background:var(--yellow); }
+.ri-status.building { background:var(--cyan); animation:pulse 1.5s infinite; }
+.ri-status.done { background:var(--green); }
+.ri-info, .qi-info, .fi-info { flex:1; }
+.ri-topic { font-size:0.88rem; font-weight:600; margin-bottom:3px; }
+.ri-meta, .qi-meta { font-size:0.7rem; color:var(--dim); }
+.ri-badge { font-size:0.65rem; padding:3px 8px; border-radius:6px; }
+.ri-pending { background:rgba(255,215,64,0.1); color:var(--yellow); }
+.ri-building { background:rgba(0,207,255,0.1); color:var(--cyan); }
+.ri-done { background:rgba(0,230,118,0.1); color:var(--green); }
+
+.qi-score { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; min-width:48px; text-align:center; }
+.qi-sim { font-size:0.82rem; font-weight:600; margin-bottom:2px; }
+
+.fi-ico { font-size:1.4rem; width:40px; text-align:center; }
+.fi-title { font-size:0.85rem; font-weight:600; }
+.fi-subject { font-size:0.7rem; color:var(--dim); }
+
+.upgrade-card { background:linear-gradient(135deg,rgba(0,207,255,0.08),rgba(170,0,255,0.08)); border:1px solid rgba(0,207,255,0.2); border-radius:16px; padding:24px; text-align:center; margin-bottom:24px; }
+.upgrade-card h3 { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; margin-bottom:8px; }
+.upgrade-card p { font-size:0.82rem; color:var(--dim); margin-bottom:16px; }
+
+.settings-card { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:16px; }
+.settings-card h3 { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:8px; }
+.settings-card p { font-size:0.82rem; color:var(--dim); line-height:1.6; margin-bottom:14px; }
+.settings-btn { font-size:0.8rem; padding:9px 16px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--text); cursor:pointer; transition:all 0.2s; }
+.settings-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+.settings-btn.danger:hover { border-color:var(--red); color:var(--red); }
+
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+</style>
+</head>
+<body>
+
+<div class="dash-page">
+  <div id="dashContent">
+    <div style="text-align:center;padding:60px;color:var(--dim)">Loading dashboard...</div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">⚛ SciSim</div>
+  <div class="footer-links">
+    <a class="footer-link" href="index.html">Home</a>
+    <a class="footer-link" href="browse.html">Browse</a>
+    <a class="footer-link" href="privacy.html">Privacy</a>
+  </div>
+  <p class="footer-copy">© 2026 SciSim</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/shared.js"></script>
+<script>
+async function init() {
+  renderNav();
+  initCookieBanner();
+  await renderNavAuth();
+  await updateMobileMenu();
+  const user = await getCurrentUser();
+  if (!user) { window.location.href = 'auth.html?redirect=dashboard.html'; return; }
+  const profile = await getUserProfile(user.id);
+  renderDashboard(user, profile);
+  loadDashData(user.id);
+  loadFavorites();
+}
+
+function renderDashboard(user, profile) {
+  const name = profile?.username || user.email?.split('@')[0] || 'there';
+  const isPrem = profile?.plan === 'premium';
+  const freeLeft = Math.max(0, 5 - (profile?.monthly_requests_used || 0));
+
+  document.getElementById('dashContent').innerHTML = `
+  <div class="dash-header">
+    <div>
+      <div class="dash-greeting">Hey, ${name} 👋</div>
+      <div class="dash-plan">
+        <span class="plan-badge ${isPrem ? 'plan-premium' : 'plan-free'}">${isPrem ? '⭐ Premium' : 'Free'}</span>
+        ${isPrem ? `<span>${freeLeft} requests left · ${profile.credits || 0} credits</span>` : ''}
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn-nav btn-ghost" href="browse.html">Browse Sims</a>
+      ${isPrem ? `<a class="btn-nav btn-primary" href="request.html">+ Request Sim</a>` : `<a class="btn-nav btn-primary" href="pricing.html">Upgrade →</a>`}
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Simulations viewed</div><div class="stat-value" id="statViews">—</div></div>
+    <div class="stat-card"><div class="stat-label">Quizzes taken</div><div class="stat-value" id="statQuizzes">—</div></div>
+    <div class="stat-card"><div class="stat-label">Avg quiz score</div><div class="stat-value" id="statScore">—</div></div>
+    <div class="stat-card"><div class="stat-label">Favorites</div><div class="stat-value" id="statFavs">—</div></div>
+  </div>
+
+  ${!isPrem ? `
+  <div class="upgrade-card">
+    <h3>Unlock unlimited access</h3>
+    <p>Get Premium with a 7-day free trial. No credit card required.</p>
+    <a class="btn-lg btn-lg-primary" href="pricing.html" style="display:inline-flex">Start Free Trial →</a>
+  </div>` : ''}
+
+  <div class="dash-tabs">
+    <button class="dash-tab active" onclick="showTab('requests',this)">My Requests</button>
+    <button class="dash-tab" onclick="showTab('quizzes',this)">Quiz History</button>
+    <button class="dash-tab" onclick="showTab('favorites',this)">♥ Favorites</button>
+    <button class="dash-tab" onclick="showTab('notifications',this)">Notifications <span id="unreadBadge"></span></button>
+    <button class="dash-tab" onclick="showTab('settings',this)">⚙️ Settings</button>
+  </div>
+
+  <div id="tab-requests" class="tab-content active"><div id="requestsList"><div style="height:60px;border-radius:12px" class="skeleton"></div></div></div>
+  <div id="tab-quizzes" class="tab-content"><div id="quizList"></div></div>
+  <div id="tab-favorites" class="tab-content"><div id="favList"></div></div>
+  <div id="tab-notifications" class="tab-content"><div id="notifList"></div></div>
+  <div id="tab-settings" class="tab-content">
+    <div class="settings-card">
+      <h3>📧 Account Email</h3>
+      <p>${user.email}</p>
+    </div>
+    <div class="settings-card" style="background:linear-gradient(135deg,rgba(0,207,255,0.08),rgba(170,0,255,0.08));border-color:rgba(0,207,255,0.2)">
+      <h3 style="color:var(--cyan)">🎁 Invite Friends, Get Free Premium</h3>
+      <p>Share your referral link. For every friend who joins Premium, you get <strong style="color:var(--cyan)">1 month free</strong>. They get a <strong style="color:var(--green)">14-day trial</strong> (vs regular 7-day).</p>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+        <input type="text" readonly value="${SITE_URL}/?ref=${user.id.substring(0,8)}" class="form-input" style="font-size:0.75rem;font-family:monospace;padding:9px 12px" id="refLink"/>
+        <button class="settings-btn" onclick="copyRef()">📋 Copy</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="share-btn" onclick="shareRef('whatsapp')" style="flex:1">💬 WhatsApp</button>
+        <button class="share-btn" onclick="shareRef('twitter')" style="flex:1">🐦 Twitter</button>
+        <button class="share-btn" onclick="shareRef('facebook')" style="flex:1">📘 Facebook</button>
+      </div>
+    </div>
+    <div class="settings-card">
+      <h3>📦 Export Your Data</h3>
+      <p>Download a complete copy of your SciSim data including profile, comments, quiz history, and requests. Required for GDPR compliance.</p>
+      <button class="settings-btn" onclick="exportUserData()">Download My Data</button>
+    </div>
+    ${isPrem ? `
+    <div class="settings-card">
+      <h3>💳 Subscription</h3>
+      <p>You're on the Premium ${profile.billing_cycle || 'monthly'} plan. To cancel or modify, please contact support.</p>
+      <a class="settings-btn" href="pricing.html">Manage Plan</a>
+    </div>` : ''}
+    <div class="settings-card" style="border-color:rgba(255,23,68,0.2)">
+      <h3 style="color:var(--red)">⚠️ Delete Account</h3>
+      <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
+      <button class="settings-btn danger" onclick="deleteAccount()">Delete My Account</button>
+    </div>
+  </div>`;
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+async function loadDashData(userId) {
+  try {
+    const { count } = await sb.from('simulation_views').select('*',{count:'exact',head:true}).eq('user_id', userId);
+    document.getElementById('statViews').textContent = count || 0;
+  } catch(e) {}
+
+  try {
+    const { data } = await sb.from('quiz_results').select('score,total').eq('user_id', userId);
+    if (data && data.length > 0) {
+      document.getElementById('statQuizzes').textContent = data.length;
+      const avg = data.reduce((s,r) => s + (r.score/r.total*100), 0) / data.length;
+      document.getElementById('statScore').textContent = avg.toFixed(0) + '%';
+    } else {
+      document.getElementById('statQuizzes').textContent = 0;
+      document.getElementById('statScore').textContent = '—';
+    }
+  } catch(e) {}
+
+  // Requests
+  try {
+    const { data } = await sb.from('request_queue').select('*').eq('user_id', userId).order('created_at', {ascending:false}).limit(20);
+    const list = document.getElementById('requestsList');
+    if (!data || data.length === 0) {
+      list.innerHTML = `<div class="empty-state">
+        <div class="icon">✉️</div>
+        <h3>No requests yet</h3>
+        <p>Can't find what you need? Request a custom simulation.</p>
+        <div class="suggestions"><a class="sg-link" href="request.html">Make Request</a></div>
+      </div>`;
+    } else {
+      list.innerHTML = data.map(r => `
+      <div class="request-item">
+        <div class="ri-status ${r.status}"></div>
+        <div class="ri-info">
+          <div class="ri-topic">${r.topic}</div>
+          <div class="ri-meta">${r.subject} · ${new Date(r.created_at).toLocaleDateString()}</div>
+        </div>
+        <span class="ri-badge ri-${r.status}">${r.status === 'pending' ? '⏳ Pending' : r.status === 'building' ? '🔨 Building' : '✅ Done'}</span>
+      </div>`).join('');
+    }
+  } catch(e) {}
+
+  // Quiz history
+  try {
+    const { data } = await sb.from('quiz_results').select('*').eq('user_id', userId).order('completed_at', {ascending:false}).limit(20);
+    const list = document.getElementById('quizList');
+    if (!data || data.length === 0) {
+      list.innerHTML = `<div class="empty-state">
+        <div class="icon">📝</div>
+        <h3>No quizzes taken yet</h3>
+        <p>Challenge yourself with quizzes on every simulation.</p>
+        <div class="suggestions"><a class="sg-link" href="browse.html">Try a Simulation</a></div>
+      </div>`;
+    } else {
+      list.innerHTML = data.map(r => {
+        const pct = Math.round(r.score/r.total*100);
+        const color = pct >= 80 ? 'var(--green)' : pct >= 60 ? 'var(--yellow)' : 'var(--red)';
+        return `
+        <div class="quiz-item">
+          <div class="qi-score" style="color:${color}">${pct}%</div>
+          <div class="qi-info">
+            <div class="qi-sim">${r.simulation_id?.replace(/_/g,' ') || 'Simulation'}</div>
+            <div class="qi-meta">${r.quiz_type} · ${r.score}/${r.total} · ${new Date(r.completed_at).toLocaleDateString()}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  } catch(e) {}
+
+  // Notifications
+  try {
+    const { data } = await sb.from('notifications').select('*').eq('user_id', userId).order('created_at', {ascending:false}).limit(20);
+    const list = document.getElementById('notifList');
+    const unread = data?.filter(n => !n.is_read).length || 0;
+    if (unread > 0) {
+      document.getElementById('unreadBadge').innerHTML = `<span style="background:var(--cyan);color:var(--bg);font-size:0.6rem;padding:1px 6px;border-radius:10px;margin-left:4px">${unread}</span>`;
+    }
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p style="color:var(--dim);font-size:0.82rem;padding:12px 0">No notifications yet.</p>';
+    } else {
+      list.innerHTML = data.map(n => `
+      <div class="notif-item" onclick="markRead('${n.id}', this)" style="cursor:pointer">
+        <div style="font-size:1.1rem">${n.type === 'simulation_ready' ? '🔬' : '💬'}</div>
+        <div><div style="font-size:0.82rem">${n.message}</div><div style="font-size:0.68rem;color:var(--dim)">${new Date(n.created_at).toLocaleDateString()}</div></div>
+      </div>`).join('');
+    }
+  } catch(e) {}
+}
+
+async function loadFavorites() {
+  const favs = await getFavorites();
+  document.getElementById('statFavs').textContent = favs.length;
+  const list = document.getElementById('favList');
+  if (favs.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="icon">♥</div>
+      <h3>No favorites yet</h3>
+      <p>Click the heart icon on any simulation to save it here.</p>
+      <div class="suggestions"><a class="sg-link" href="browse.html">Browse Simulations</a></div>
+    </div>`;
+    return;
+  }
+  const sims = await loadSimulationsData();
+  const favSims = sims.filter(s => favs.includes(s.id));
+  list.innerHTML = favSims.map(s => {
+    const subj = SUBJECTS[s.subject] || { icon:'🔬', color:'#00cfff' };
+    return `
+    <a class="fav-item" href="simulation.html?id=${s.id}" style="text-decoration:none;color:var(--text)">
+      <div class="fi-ico">${subj.icon}</div>
+      <div class="fi-info"><div class="fi-title">${s.title}</div><div class="fi-subject" style="color:${subj.color}">${s.subject}</div></div>
+      <span style="color:var(--dim)">→</span>
+    </a>`;
+  }).join('');
+}
+
+async function markRead(id, el) {
+  el.style.opacity = '0.6';
+  await sb.from('notifications').update({ is_read: true }).eq('id', id);
+}
+
+// Referral functions
+async function copyRef() {
+  const link = document.getElementById('refLink').value;
+  await navigator.clipboard.writeText(link);
+  const btn = event.target;
+  btn.textContent = '✅ Copied!';
+  setTimeout(() => btn.textContent = '📋 Copy', 2000);
+}
+
+function shareRef(platform) {
+  const link = document.getElementById('refLink').value;
+  const text = "Check out SciSim — interactive 3D science simulations. Use my link for an extended 14-day free Premium trial!";
+  if (platform === 'whatsapp') shareOnWhatsApp(text, link);
+  else if (platform === 'twitter') shareOnTwitter(text, link);
+  else if (platform === 'facebook') shareOnFacebook(link);
+}
+
+init();
+</script>
+</body>
+</html>

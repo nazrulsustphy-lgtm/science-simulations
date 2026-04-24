@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — SciSim</title>
+<meta name="description" content="Sign in to SciSim to access interactive science simulations, save your progress, and join discussions.">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<style>
+.auth-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; position:relative; z-index:1; }
+.auth-box { background:var(--s1); border:1px solid var(--border2); border-radius:24px; padding:48px 40px; width:100%; max-width:420px; text-align:center; }
+.auth-logo { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; background:linear-gradient(90deg,var(--cyan),var(--teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:8px; }
+.auth-title { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:700; margin-bottom:8px; }
+.auth-sub { font-size:0.85rem; color:var(--dim); line-height:1.6; margin-bottom:32px; }
+.google-btn { width:100%; padding:14px 24px; border-radius:12px; border:1px solid var(--border2); background:var(--s2); color:var(--text); font-size:0.92rem; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; transition:all 0.2s; }
+.google-btn:hover { border-color:var(--cyan); background:rgba(0,207,255,0.05); }
+.auth-features { display:flex; flex-direction:column; gap:10px; margin:28px 0; text-align:left; }
+.auth-feature { display:flex; align-items:center; gap:10px; font-size:0.82rem; color:var(--dim); }
+.auth-feature span { color:var(--green); }
+.auth-terms { font-size:0.7rem; color:var(--muted); line-height:1.6; margin-top:20px; }
+.auth-terms a { color:var(--dim); }
+.trial-banner { background:rgba(0,230,118,0.08); border:1px solid rgba(0,230,118,0.2); padding:10px 14px; border-radius:10px; margin-bottom:20px; font-size:0.78rem; color:var(--green); }
+</style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">⚛ SciSim</div>
+    <div class="trial-banner">🎉 New: 7-day free Premium trial included</div>
+    <h1 class="auth-title">Welcome back</h1>
+    <p class="auth-sub">Sign in to access simulations, track progress, and join the discussion.</p>
+
+    <div class="auth-features">
+      <div class="auth-feature"><span>✓</span>Access 560+ interactive simulations</div>
+      <div class="auth-feature"><span>✓</span>Save your quiz scores & favorites</div>
+      <div class="auth-feature"><span>✓</span>Join discussions on every topic</div>
+      <div class="auth-feature"><span>✓</span>Request custom simulations (Premium)</div>
+    </div>
+
+    <button class="google-btn" onclick="handleGoogleSignIn()">
+      <span style="font-size:1.1rem">🔵</span> Continue with Google
+    </button>
+
+    <div id="loadingState" style="display:none"><p style="font-size:0.85rem;color:var(--dim);margin-top:16px">Signing in...</p></div>
+
+    <p class="auth-terms">
+      By continuing, you agree to our <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>. You must be 13+ to use SciSim.
+    </p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+async function init() {
+  const user = await getCurrentUser();
+  if (user) {
+    const redirect = new URLSearchParams(location.search).get('redirect');
+    window.location.href = redirect || 'dashboard.html';
+  }
+}
+async function handleGoogleSignIn() {
+  document.getElementById('loadingState').style.display = 'block';
+  await signInWithGoogle();
+}
+init();
+</script>
+</body>
+</html>

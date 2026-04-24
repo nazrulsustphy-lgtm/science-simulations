@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embed Simulation — SciSim</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#03050c; color:#e8edf5; font-family:-apple-system,sans-serif; overflow:hidden; }
+body.light { background:#ffffff; color:#1a202c; }
+
+.embed-wrap { position:relative; height:100vh; display:flex; flex-direction:column; }
+iframe { flex:1; width:100%; border:none; }
+
+.branding {
+  position:absolute; bottom:12px; right:12px; z-index:10;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(10px);
+  padding:6px 12px; border-radius:8px;
+  font-size:0.68rem; color:#e8edf5;
+  text-decoration:none; display:flex; align-items:center; gap:6px;
+  transition:all 0.2s;
+}
+.branding:hover { background:rgba(0,207,255,0.9); color:#03050c; }
+body.light .branding { background:rgba(255,255,255,0.9); color:#1a202c; border:1px solid #e2e8f0; }
+
+.error-state {
+  height:100%; display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:12px; padding:20px; text-align:center;
+}
+.error-state h2 { font-size:1.2rem; color:#ff4081; }
+.error-state p { font-size:0.85rem; color:#6b7fa0; max-width:400px; line-height:1.6; }
+.error-state a { color:#00cfff; text-decoration:none; font-size:0.85rem; }
+
+.loading-state {
+  height:100%; display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:12px;
+}
+.spinner { width:36px; height:36px; border:3px solid rgba(0,207,255,0.2); border-top-color:#00cfff; border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="embed-wrap" id="wrap">
+  <div class="loading-state"><div class="spinner"></div><div style="font-size:0.85rem;color:#6b7fa0">Loading simulation...</div></div>
+</div>
+
+<a href="" target="_blank" class="branding" id="brandLink">
+  ⚛ SciSim
+</a>
+
+<script>
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const id = location.pathname.split('/').pop().replace('.html','') || params.get('id');
+  const theme = params.get('theme') || 'dark';
+  const showQuiz = params.get('quiz') === 'true';
+
+  if (theme === 'light') document.body.classList.add('light');
+
+  const wrap = document.getElementById('wrap');
+  const brandLink = document.getElementById('brandLink');
+
+  try {
+    const res = await fetch('data/index.json');
+    if (!res.ok) throw new Error('Data not available');
+    const sims = await res.json();
+    const sim = sims.find(s => s.id === id);
+
+    if (!sim) {
+      wrap.innerHTML = `
+      <div class="error-state">
+        <h2>Simulation not found</h2>
+        <p>The simulation "${id}" could not be loaded.</p>
+        <a href="/" target="_blank">Browse simulations →</a>
+      </div>`;
+      return;
+    }
+
+    brandLink.href = `/simulation.html?id=${id}`;
+    brandLink.title = 'View full version with quiz + explanation';
+    document.title = `${sim.title} — SciSim Embed`;
+
+    wrap.innerHTML = `<iframe src="${sim.file}" sandbox="allow-scripts allow-same-origin" loading="lazy"></iframe>`;
+
+    // Log embed view (optional)
+    try {
+      const referrer = document.referrer || 'direct';
+      navigator.sendBeacon && navigator.sendBeacon('/api/embed-log', JSON.stringify({ id, referrer }));
+    } catch(e) {}
+
+  } catch(e) {
+    wrap.innerHTML = `
+    <div class="error-state">
+      <h2>Loading failed</h2>
+      <p>Could not load simulation. Please try again later.</p>
+      <a href="/" target="_blank">Visit SciSim →</a>
+    </div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
