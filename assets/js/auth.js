@@ -4,8 +4,13 @@
 async function getCurrentUser() {
   if (!sb) sb = getSupabase();
   if (!sb) return null;
-  const { data: { session } } = await sb.auth.getSession();
-  return session?.user || null;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    return session?.user || null;
+  } catch(e) {
+    console.error('getCurrentUser error:', e);
+    return null;
+  }
 }
 
 // ── GET USER PROFILE (cached) ──
